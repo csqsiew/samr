@@ -1,0 +1,20 @@
+Package: samr
+Type: Package
+Title: Spreading Activation Machine in R
+Version: 0.1.0
+Authors@R: person("Cynthia", "Siew", email = "cynsiewsq@gmail.com",
+                  role = c("aut", "cre"))
+Description: A set of functions to simulate the spreading of activation among nodes in a 
+    network. Additional functions will be included in later versions to improve the workflow
+    and compile the results. Will form the foundation of a future theory of spoken word 
+    recognition.  
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+  dplyr,
+  igraph
+RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

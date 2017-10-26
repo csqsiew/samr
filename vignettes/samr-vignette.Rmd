@@ -1,0 +1,150 @@
+---
+title: "SAM-R: Spreading of Activation Machine in R"
+author: "CSQ Siew"
+date: "`r Sys.Date()`"
+output: 
+# rmarkdown::html_vignette
+  word_document: default
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Load required libraries and data:  
+
+```{r, message=FALSE, warning=FALSE}
+library(igraph)
+library(dplyr)
+library(samr)
+library(rio)
+load('gc.net.RData') # giant component of the phonological network
+load('hml.RData')    # contains list of words in the HML with the label 
+```
+
+# Brief description:  
+
+So I finally decided to take another stab at this. My initial attempts resulted in very inefficient code that took a long time to run. The entire approach to the SAM is now revamped so that it can be scaled up substantially, runs more efficiently, and hopefully will form the basis of a future network model of spoken word recognition. In a nutshell, SAM-R is a home-made R package to simulate the spreading of activation among nodes in a network and to output the data for subsequent analysis.   
+
+A key improvement of this version is that the user can specify the initial conditions of the simulation by providing a dataframe with `words` and `activation` columns.  
+
+Consider Example 1 below. The initial conditions are:  
+
+* Give the "aback" node an initial activation of 100 units. 
+* Let activation spread for 5 time steps.
+* Each node is allowed to retain 50% of its initial activation after each time step. 
+* The spreading of activation will occur within the giant component of the phonological network, as specified by the `gc.net` igraph object.    
+
+
+```{r}
+# Example 1
+words <- c('xb@k;aback')
+activation <- c(100)
+start_1_word <- data.frame(words, activation, stringsAsFactors=FALSE)
+
+butter(start_1_word, 0.5, gc.net, 5) 
+```
+
+One thing to take note of is that when specifying `words` I used the labels specified in the `gc.net`. I like that it has both phonological and orthographic representations so that I can check the code while knowing the heck these words are. Hence it might be useful to have the `hml.RData` on hand when selecting words.   
+
+```{r}
+head(hml)
+```
+
+# Another example:  
+
+Sometimes, one might want to specify more nodes to have initial activations--especially in the context of spoken word recognition where a node's neighbors are partially activated (due to overlap in phonemes that are activated by the incoming acoustic information). The way that the input for `butter()` function is set up allows the user to do this easily.   
+
+Consider Example 2 below. The initial conditions are:  
+
+* Give the "aback" node an initial activation of 100 units.
+* The neighbors of "aback" get an initial activation of 50 units. 
+* Let activation spread for 5 time steps.
+* Each node is allowed to retain 80% of its initial activation after each time step. 
+* The spreading of activation will occur within the giant component of the phonological network, as specified by the `gc.net` igraph object.   
+
+
+```{r}
+# Example 2
+words <- c('xb@k;aback', 'xb@S;abash', 'xt@k;attack', 'b@k;back') # include neighbors 
+activation <- c(100, 50, 50, 50)
+start_1_word_w_neighbors <- data.frame(words, activation, stringsAsFactors=FALSE)
+
+butter(start_1_word_w_neighbors, 0.8, gc.net, 5) 
+```
+
+# Work flow example:   
+
+If you want to simulate a bunch of words, it is easy to set up a workflow to run the simulations and save the results to an external file for subsequent analyses.   
+
+Consider Example 3 below. The initial conditions are:  
+
+* Give the "aback" and "abash" nodes an initial activation of 100 units.  
+* Run the simulation twice for each node (independent of each other). 
+* Let activation spread for 5 time steps.
+* Each node is allowed to retain 80% of its initial activation after each time step. 
+* The spreading of activation will occur within the giant component of the phonological network, as specified by the `gc.net` igraph object.   
+
+
+```{r}
+# make a dataset to simulate the spreading of activation independently for two words
+# each with an initial activation value of 100
+words <- c('xb@k;aback', 'xb@S;abash')
+activation <- c(100,100)
+test <- data.frame(words, activation, stringsAsFactors=FALSE)
+
+# use a for loop to go through each word in the test set and save the output
+for (x in 1:nrow(test)) { # for each row in the test set 
+
+  bread <- butter(test[x, ], 0.8, gc.net, 5)
+  
+  # save the output as a .csv file
+  # the target word is used as the file name 
+  write.csv(bread, file = paste0(test$words[x],'.csv'))
+  
+  # view the output in real time
+  print(bread) 
+}
+```
+
+Note that this workflow only works if the initial input consists of one node (i.e., only 1 word was activated with 100 units initially).    
+
+In the near future, the model could expand to allow for simulations with an initial activation 'space' (i.e., see Example 2 where a target word might receive 100 units, its neighbors receive 50 units each (depending on overlap of phonemes)).  
+
+# Visualizing the results  
+
+```{r}
+library(ggplot2)
+
+bread <- butter(test[2, ], 0.8, gc.net, 10) # target word = abash 
+
+ggplot(data = bread,  aes(x = time, y = activation, color = words, group = words)) + 
+  geom_point() +
+  geom_line()
+```
+
+# A quick example to demonstrate how the activation results might be compiled.  
+
+One thing to look at (among others, like number of active nodes, relative difference between activation values among active nodes, etc.) is the final activation value of the target node.  
+
+```{r}
+words <- c('xb@k;aback', 'xb@S;abash')
+
+final_act <- data.frame(words = vector(), activation = vector(), time = vector(), 
+                        stringsAsFactors=FALSE)
+
+for (i in 1:length(words)) {
+  result <- import(paste0(words[i], '.csv')) # read in .csv file for a given word 
+  result <- result[ , -1]                    # remove first column 
+  result <- result[which(result$words %in% words[i]), ] # extract rows with the target
+  result <- result[order(result$time, decreasing = T), ]    # order by the latest run first 
+  final_act <- rbind(final_act, result[1, ])                # save the final activation value
+}
+
+final_act
+```
+
+Cynthia's to do list:  
+
+* Make a function that creates an activation space depending on phoneme overlap. 
+* Make helper functions to compile and analyze the simulation output. 
