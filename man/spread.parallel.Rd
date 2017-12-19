@@ -6,7 +6,7 @@
 simulates the spread of activation of the words listed in the 'words' columns to its
 neighbors in the specified network.}
 \usage{
-spread.parallel(start_run, decay, retention, network)
+spread.parallel(start_run, decay, retention, suppress, network)
 }
 \arguments{
 \item{start_run}{A non-empty dataframe with 'words' and 'activation' columns.}
@@ -14,6 +14,8 @@ spread.parallel(start_run, decay, retention, network)
 \item{decay}{Proportion of activation that is lost at each time step, ranges from 0 to 1.}
 
 \item{retention}{Proportion of activation that remains in the node, ranges from 0 to 1.}
+
+\item{suppress}{Suppress nodes with total final activation of < x units at each time step. Recommended value of x is 0.1% of initial activation of target at t = 0.}
 
 \item{network}{Network where the spreading occurs.}
 }

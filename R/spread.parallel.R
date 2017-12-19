@@ -5,18 +5,21 @@
 #' @param start_run A non-empty dataframe with 'words' and 'activation' columns.
 #' @param decay Proportion of activation that is lost at each time step, ranges from 0 to 1.
 #' @param retention Proportion of activation that remains in the node, ranges from 0 to 1.
+#' @param suppress Suppress nodes with total final activation of < x units at each time step. Recommended value of x is 0.1% of initial activation of target at t = 0.
 #' @param network Network where the spreading occurs.
 #' @return A updated dataframe with 'words' and 'activation' columns with new activation values.
 #' @examples
 #' See Vignette for examples.
 
-spread.parallel <- function(start_run, decay, retention, network) {
+spread.parallel <- function(start_run, decay, retention, suppress, network) {
   # start_run = a non-empty dataframe with 'words' and 'activation' columns
   # start_run dataframe must be specified in the butter.parallel() function
   # decay = proportion of activation that is lost at each time step, ranges from 0 to 1
   # decay value must be specified in the butter.parallel() function
   # retention = proportion of activation that remains in the node, ranges from 0 to 1
   # retention value must be specified in the butter.parallel() function
+  # suppress = nodes with activation less than the suppress value will be suppressed
+  # suppress value must be specified in the butter.parallel() function
   # network = network where the spreading occurs
   # network / igraph object must be specified in the butter.parallel() function
 
@@ -84,8 +87,8 @@ spread.parallel <- function(start_run, decay, retention, network) {
   # allow entire end_run dataframe to 'decay' based on decay value
   end_run$activation <- end_run$activation*(1 - decay)
 
-  # suppress outputs that are less than 1 to speed up the process, but may want to add an option to allow for suppression or not
-  end_run <- dplyr::filter(end_run, activation > 1)
+  # suppress outputs that are less than a specified value to speed up the process
+  end_run <- dplyr::filter(end_run, activation > suppress)
 
   # return the output
   return(as.data.frame(end_run))

@@ -11,18 +11,21 @@
 #' @param start_run A non-empty dataframe with 'words' and 'activation' columns. Must be specified.
 #' @param decay Proportion of activation that is lost at each time step. Default is 20%.
 #' @param retention Proportion of activation that remains in the node, ranges from 0 to 1. Default is 0.
+#' @param suppress Suppress nodes with total final activation of < x units at each time step. Recommended value of x is 0.1% of initial activation of target at t = 0. Default is 0.1.
 #' @param network Network where the spreading occurs. Must be specified. Default is gc.net.
 #' @param time Number of time steps to run spread function for. Default is 10.
 #' @return A compiled dataframe with 'words', 'activation' and 'time' columns showing the spread of activation in the network over time.
 #' @examples
 #' See Vignette for examples.
 
-butter.parallel <- function(start_run, decay = 0.2, retention = 0, network = gc.net, time = 10) {
+butter.parallel <- function(start_run, decay = 0.2, retention = 0, suppress = 0.1, network = gc.net, time = 10) {
   # start_run = a non-empty dataframe with 'words' and 'activation' columns
   # decay = proportion of activation that is lost over time, ranges from 0 to 1
   # decay value default = 0.2
   # retention = proportion of activation that remains in the node, ranges from 0 to 1
   # retention value default = 0
+  # suppress = nodes with activation less than the suppress value will be suppressed at each time step
+  # suppress value default = 0.1 (0.1% of 100 units)
   # network = network where the spreading occurs
   # network value default = gc.net
   # time = number of time steps to run spread() for
@@ -60,7 +63,7 @@ butter.parallel <- function(start_run, decay = 0.2, retention = 0, network = gc.
 
   for (t in 1:time) {
 
-    updated <- spread.parallel(start_run, decay, retention, network)
+    updated <- spread.parallel(start_run, decay, retention, suppress, network)
 
     if (nrow(updated) > 0) {
       # if updated is not empty, save the updated output

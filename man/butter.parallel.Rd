@@ -6,8 +6,8 @@
 calls the spread function for a specific number of times to simulate the spread of
 activation of a given initial activation space (specified in start_time) over time.}
 \usage{
-butter.parallel(start_run, decay = 0.2, retention = 0, network = gc.net,
-  time = 10)
+butter.parallel(start_run, decay = 0.2, retention = 0, suppress = 0.1,
+  network = gc.net, time = 10)
 }
 \arguments{
 \item{start_run}{A non-empty dataframe with 'words' and 'activation' columns. Must be specified.}
@@ -15,6 +15,8 @@ butter.parallel(start_run, decay = 0.2, retention = 0, network = gc.net,
 \item{decay}{Proportion of activation that is lost at each time step. Default is 20%.}
 
 \item{retention}{Proportion of activation that remains in the node, ranges from 0 to 1. Default is 0.}
+
+\item{suppress}{Suppress nodes with total final activation of < x units at each time step. Recommended value of x is 0.1% of initial activation of target at t = 0. Default is 0.1.}
 
 \item{network}{Network where the spreading occurs. Must be specified. Default is gc.net.}
 

@@ -46,8 +46,8 @@ make.initial <- function(target, reference, target_act, cutoff = 100) {
   target_initialact <- target_initialact %>%
     dplyr::mutate(activation = target_act / (1 + actspace)) %>%
     filter(actspace < cutoff) %>%
-    select(words, activation) %>%
-    filter(activation > 1)
+    select(words, activation) # %>%
+    # filter(activation > 1)
 
   return(target_initialact)
 
